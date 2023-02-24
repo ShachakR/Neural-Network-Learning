@@ -15,7 +15,7 @@ class Loss(ABC):
     @abstractmethod
     def compute(self, x, t):
         """ Computes loss function
-        x: data point 
+        x: prediction
         t: target
         """
         pass
@@ -23,7 +23,7 @@ class Loss(ABC):
     @abstractmethod
     def compute_derivative(self, x, t):
         """ Computes derivative loss function
-        x: data point 
+        x: prediction
         t: target
         """
         pass
@@ -65,6 +65,32 @@ class LogisticLoss(Loss):
 
         return -(top/bottom)
 
+class BinaryCrossentropy(Loss):
+    def compute(self, x, t):
+        epsilon = 1e-7  # to avoid taking the log of 0
+    
+        # Clip y_pred to avoid log(0) and log(1)
+        y_pred = np.clip(x, epsilon, 1 - epsilon)
+        
+        # Compute the binary cross-entropy loss
+        loss = -(t * np.log(y_pred) + (1 - t) * np.log(1 - y_pred))
+        
+        # Take the mean of the loss across all samples
+        loss = np.mean(loss)
+        
+        return loss
+    
+    def compute_derivative(self, x, t):
+        epsilon = 1e-7  # to avoid division by zero
+    
+        # Clip y_pred to avoid division by zero
+        y_pred = np.clip(x, epsilon, 1 - epsilon)
+        
+        # Compute the derivative of the binary cross-entropy loss with respect to y_pred
+        derivative = -(t / y_pred) + ((1 - t) / (1 - y_pred))
+        
+        return derivative
+
 class Activation(ABC): 
     @abstractmethod
     def compute(self, x):
@@ -100,38 +126,39 @@ class Sigmoid(Activation):
     def __str__(self):
         return 'sigmoid'
 
-class Softmax(Activation):
-    def compute(self, x):
-        """Compute the softmax of a list of numbers x."""
-        # Subtract the maximum value from all elements to avoid numerical instability.
-        x = [xi - max(x) for xi in x]
+# Need to adjust to work for current implimentation
+# class Softmax(Activation):
+#     def compute(self, x):
+#         """Compute the softmax of a list of numbers x."""
+#         # Subtract the maximum value from all elements to avoid numerical instability.
+#         x = [xi - max(x) for xi in x]
 
-        # Compute the exponent of each element.
-        exp_x = [math.exp(xi) for xi in x]
+#         # Compute the exponent of each element.
+#         exp_x = [math.exp(xi) for xi in x]
 
-        # Normalize the exponentiated values.
-        return [xi / sum(exp_x) for xi in exp_x]
+#         # Normalize the exponentiated values.
+#         return [xi / sum(exp_x) for xi in exp_x]
     
-    def compute_derivative(self, x):
-        """Compute the derivative of the softmax function for a list of numbers x."""
-        # Compute the softmax of x.
-        y = self.compute(x)
+#     def compute_derivative(self, x):
+#         """Compute the derivative of the softmax function for a list of numbers x."""
+#         # Compute the softmax of x.
+#         y = self.compute(x)
 
-        # Initialize the derivative as an empty list of the same length as x.
-        d = [0] * len(x)
+#         # Initialize the derivative as an empty list of the same length as x.
+#         d = [0] * len(x)
 
-        # For each element of y, compute its derivative with respect to x.
-        for i in range(len(y)):
-            for j in range(len(y)):
-                if i == j:
-                    d[i] += y[i] * (1 - y[i])
-                else:
-                    d[i] -= y[i] * y[j]
+#         # For each element of y, compute its derivative with respect to x.
+#         for i in range(len(y)):
+#             for j in range(len(y)):
+#                 if i == j:
+#                     d[i] += y[i] * (1 - y[i])
+#                 else:
+#                     d[i] -= y[i] * y[j]
 
-        return d
+#         return d
     
-    def __str__(self):
-        return 'softmax'
+#     def __str__(self):
+#         return 'softmax'
     
     
 
