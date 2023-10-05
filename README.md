@@ -15,7 +15,7 @@ Before using the script, make sure you have the following Python libraries insta
 - `json`
 - `math`
 
-You can install these dependencies using `pip`:
+You can install these dependencies using `pip`
 
 ## Data formating
 ```python
