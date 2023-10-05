@@ -22,7 +22,7 @@ You can install these dependencies using `pip`
 from neural_network import *
 
 data_points, labels = build_data("path/to/csv/dataset.csv")
-train_x, train_y, test_x, test_y = train_test_split(data_points, labels, train_split=0.2)
+train_x, train_y, test_x, test_y = train_test_split(data_points, labels, train_split=0.8)
 ```
 
 ## Creating the Model
