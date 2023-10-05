@@ -4,7 +4,7 @@
 My attempt to build a neural network framework from scratch, this mainly for my own learning and to help me improve my understanding of neural networks and meachine learning. 
 
 # Usage 
-Refer to any of the test files (i.e text_regression.py) for examples on usage
+Refer to any of the test files (i.e test_regression.py) for examples on usage
 
 ## Prerequisites
 
