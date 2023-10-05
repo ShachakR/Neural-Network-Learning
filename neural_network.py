@@ -2,8 +2,9 @@ import random
 import numpy as np
 import csv
 import json
-from abc import ABC, abstractmethod
+import sys
 import math
+from abc import ABC, abstractmethod
 from enum import Enum
 
 class Type(Enum):
@@ -159,7 +160,7 @@ class Model():
         self.regularizer = regularizer
         w = self.initW()
         best_weights = w  # Store the best weights
-        min_loss = 999999
+        min_loss = sys.maxsize
 
         for epoch in range(epochs):
             # Shuffle the training data at the beginning of each epoch
@@ -178,18 +179,16 @@ class Model():
                 w = self.SGD(w, batch_x, batch_y)
 
             loss, accuracy = self._metrics(w)
-            
             if loss < min_loss:  # Check if this epoch has the lowest loss
                 min_loss = loss
                 best_weights = w.copy()  # Save the best weights
+            w = best_weights
 
             if metrics:
                 print('Epoch {}: loss = {:.4f}, accuracy = {:.2f}%'.format(epoch + 1, loss, 100 * accuracy))
 
         print('Finished!')
-        loss, accuracy = self._metrics(best_weights)  # Use the best weights for final evaluation
         self.predictor = best_weights  # Update the predictor with the best weights
-        print('Final predictor results: loss = {:.4f}, accuracy = {:.2f}%'.format(loss, 100 * accuracy))
     
 
     def _metrics(self, w):
@@ -360,8 +359,15 @@ class Model():
         return np.ndarray.tolist(w), index - 1
 
     def print_network(self):
+        print("----------MODEL LAYOUT----------")
         for layer_i, layer in enumerate(self.layers):
-            print('Layer {}: nodes = {}, activation = {}'.format(layer_i, layer.n, layer.activation_func))
+            if layer_i == 0:
+                print('Input Layer {}: nodes = {}, activation = {}'.format(layer_i, layer.n, layer.activation_func.__class__.__name__))
+            elif layer_i == len(self.layers) - 1:
+                print('Output Layer {}: nodes = {}, activation = {}'.format(layer_i, layer.n, layer.activation_func.__class__.__name__))
+            else:
+                print('Hidden Layer {}: nodes = {}, activation = {}'.format(layer_i, layer.n, layer.activation_func.__class__.__name__))
+        print("---------------------------------")
 
     def initW(self):
         W_vector = []
@@ -387,7 +393,7 @@ class Model():
 
         with open(file_path, 'w') as model_file:
             json.dump(model_data, model_file)
-            
+
     @staticmethod
     def load_model(file_path):
         with open(file_path, 'r') as model_file:
@@ -432,7 +438,7 @@ def build_data(csv_data_file, add_bias=False):
 
     return data_points, labels
 
-def split_train_test(features, labels, train_split=0.8):
+def train_test_split(features, labels, train_split=0.8):
     train_x = features[:int(len(features) * train_split)]
     train_y = labels[:int(len(labels) * train_split)]
     test_x = features[int(len(features) * train_split):]
