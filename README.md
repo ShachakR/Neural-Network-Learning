@@ -17,7 +17,7 @@ Before using the script, make sure you have the following Python libraries insta
 
 You can install these dependencies using `pip`
 
-## Data formating
+## Data Formating
 ```python
 from neural_network import *
 
