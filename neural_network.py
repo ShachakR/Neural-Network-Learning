@@ -151,6 +151,20 @@ class Model():
         return edges
 
     def train(self, epochs, learning_rate=0.01, accuracy_threshold=0.05, regularizer=0, batch_size=32, metrics=False):
+        """
+        Train the neural network model.
+
+        Args:
+            epochs (int): The number of training epochs.
+            learning_rate (float): The learning rate for gradient descent.
+            accuracy_threshold (float): The threshold for accuracy in regression tasks.
+            regularizer (float): The regularization parameter.
+            batch_size (int): The batch size for mini-batch gradient descent.
+            metrics (bool): Whether to print training metrics during training.
+
+        Returns:
+            None
+        """
         if not self.validate():
             return
 
@@ -376,6 +390,15 @@ class Model():
         return W_vector
     
     def save_model(self, file_path):
+        """
+        Save the model configuration and weights to a file.
+
+        Args:
+            file_path (str): The path to the output file.
+
+        Returns:
+            None
+        """
         model_data = {
             "type": self.type.value,
             "layers": [
@@ -396,6 +419,15 @@ class Model():
 
     @staticmethod
     def load_model(file_path):
+        """
+        Load a saved model from a file.
+
+        Args:
+            file_path (str): The path to the saved model file.
+
+        Returns:
+            Model: The loaded model.
+        """
         with open(file_path, 'r') as model_file:
             model_data = json.load(model_file)
 
@@ -415,6 +447,17 @@ class Model():
 
 
 def build_data(csv_data_file, add_bias=False):
+    """
+    Build data from a CSV file.
+
+    Args:
+        csv_data_file (str): The path to the CSV data file.
+        add_bias (bool): Whether to add a bias term to the features (default is False).
+
+    Returns:
+        list: Data points (features).
+        list: Labels.
+    """
     data = []
     data_points = []
     labels = []
@@ -439,6 +482,20 @@ def build_data(csv_data_file, add_bias=False):
     return data_points, labels
 
 def train_test_split(features, labels, train_split=0.8):
+    """
+    Split data into training and testing sets.
+
+    Args:
+        features (list): Input features.
+        labels (list): True labels.
+        train_split (float): The ratio of data to use for training.
+
+    Returns:
+        list: Training features.
+        list: Training labels.
+        list: Testing features.
+        list: Testing labels.
+    """
     train_x = features[:int(len(features) * train_split)]
     train_y = labels[:int(len(labels) * train_split)]
     test_x = features[int(len(features) * train_split):]
