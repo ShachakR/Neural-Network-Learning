@@ -48,12 +48,12 @@ model = Model(train_x, train_y, type=task_type, layers=layers, loss=loss_functio
 
 ## Train the Model
 ```python
-model.train(epochs=1000, metrics=True)
+model.train(epochs=100, metrics=True)
 ```
 
 ## Testing the Model
 ```python
-test_loss, test_accuracy = model.test(test_x, test_y)
+test_loss, test_accuracy = model.test(model.predictor, test_x, test_y)
 print(f"Test Loss: {test_loss:.4f}")
 print(f"Test Accuracy: {test_accuracy * 100:.2f}%")
 ```
