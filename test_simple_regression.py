@@ -2,7 +2,7 @@ from neural_network import *
 
 # Load and preprocess your data
 data_points, labels = build_data("test_data_sets/regression/simple.csv")
-train_x, train_y, test_x, test_y = train_test_split(data_points, labels, train_split=0.2)
+train_x, train_y, test_x, test_y = train_test_split(data_points, labels, train_split=0.8)
 
 # Define your neural network architecture
 layers = [
@@ -20,10 +20,10 @@ model = Model(train_x, train_y, type=task_type, layers=layers, loss=loss_functio
 model.print_network()
 
 # Train the model
-model.train(epochs=8000, batch_size=7, metrics=True)
+model.train(epochs=10, batch_size=7, metrics=True)
 
 # Test the model
-test_loss, test_accuracy = model.test(test_x, test_y)
+test_loss, test_accuracy = model.test(model.predictor, test_x, test_y)
 print(f"Test Loss: {test_loss:.4f}")
 print(f"Test Accuracy: {test_accuracy * 100:.2f}%")
 

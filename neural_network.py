@@ -20,7 +20,8 @@ class ActivationFactory:
             return ReLU()
         elif name == "Sigmoid":
             return Sigmoid()
-        # Add more activation functions as needed.
+        else:
+            raise ValueError(f"Unsupported activation function: {name}")
 
 class LossFactory:
     @staticmethod
@@ -33,7 +34,8 @@ class LossFactory:
             return LogisticLoss()
         elif name == "BinaryCrossentropy":
             return BinaryCrossentropy()
-        # Add more loss functions as needed.
+        else:
+            raise ValueError(f"Unsupported loss function: {name}")
 
 class Loss(ABC):
     @abstractmethod
@@ -150,13 +152,14 @@ class Model():
             edges += self.layers[t].n * self.layers[t + 1].n
         return edges
 
-    def train(self, epochs, learning_rate=0.01, accuracy_threshold=0.05, regularizer=0, batch_size=32, metrics=False):
+    def train(self, epochs, learning_rate=0.01, validation_split=0.2, accuracy_threshold=0.05, regularizer=0, batch_size=32, metrics=False):
         """
         Train the neural network model.
 
         Args:
             epochs (int): The number of training epochs.
             learning_rate (float): The learning rate for gradient descent.
+            validation_split (float): The portion of data to be used for validation.
             accuracy_threshold (float): The threshold for accuracy in regression tasks.
             regularizer (float): The regularization parameter.
             batch_size (int): The batch size for mini-batch gradient descent.
@@ -176,61 +179,51 @@ class Model():
         best_weights = w  # Store the best weights
         min_loss = sys.maxsize
 
+        # Split data into training and validation sets
+        num_samples = len(self.train_x)
+        num_val_samples = int(validation_split * num_samples)
+        train_x = self.train_x[:-num_val_samples]
+        train_y = self.train_y[:-num_val_samples]
+        val_x = self.train_x[-num_val_samples:]
+        val_y = self.train_y[-num_val_samples:]
+
         for epoch in range(epochs):
             # Shuffle the training data at the beginning of each epoch
-            combined_data = list(zip(self.train_x, self.train_y))
+            combined_data = list(zip(train_x, train_y))
             random.shuffle(combined_data)
-            self.train_x, self.train_y = zip(*combined_data)
+            train_x, train_y = zip(*combined_data)
 
-            num_batches = len(self.train_x) // batch_size
+            num_batches = len(train_x) // batch_size
             for batch_idx in range(num_batches):
                 start_idx = batch_idx * batch_size
                 end_idx = (batch_idx + 1) * batch_size
 
-                batch_x = self.train_x[start_idx:end_idx]
-                batch_y = self.train_y[start_idx:end_idx]
-
+                batch_x = train_x[start_idx:end_idx]
+                batch_y = train_y[start_idx:end_idx]
                 w = self.SGD(w, batch_x, batch_y)
 
-            loss, accuracy = self._metrics(w)
-            if loss < min_loss:  # Check if this epoch has the lowest loss
-                min_loss = loss
+            # Compute loss and accuracy on validation set
+            val_loss, val_accuracy = self.test(w, val_x, val_y)
+            if val_loss < min_loss:  # Check if this epoch has the lowest validation loss
+                min_loss = val_loss
                 best_weights = w.copy()  # Save the best weights
             w = best_weights
 
             if metrics:
-                print('Epoch {}: loss = {:.4f}, accuracy = {:.2f}%'.format(epoch + 1, loss, 100 * accuracy))
+                print('Epoch {}: val_loss = {:.4f}, val_accuracy = {:.2f}%'.format(epoch + 1, val_loss, 100 * val_accuracy))
 
         print('Finished!')
         self.predictor = best_weights  # Update the predictor with the best weights
-    
 
-    def _metrics(self, w):
-        loss = 0
-        accuracy = 0
-        test_amount = round(len(self.train_x) * 0.1) + 1
-        for i in range(test_amount):
-            X = self.train_x[i]
-            target = self.train_y[i]
-            prediction = self.predict(X, w)
-            computed_loss = self.loss.compute(prediction, target)
-            loss += computed_loss
-            if self.type == Type.REGRESSION and computed_loss < self.accuracy_threshold:
-                accuracy += 1
-            else:
-                if prediction == target:
-                    accuracy += 1
-
-        return loss / len(self.train_x), accuracy / test_amount
     
-    def test(self, x_data, y_data):
+    def test(self, w, x_data, y_data):
         loss = 0
         accuracy = 0
         test_amount = round(len(x_data))
         for i in range(test_amount):
             X = x_data[i]
             target = y_data[i]
-            prediction = self.predict(X, self.predictor)
+            prediction = self.predict(X, w)
             computed_loss = self.loss.compute(prediction, target)
             loss += computed_loss
             if self.type == Type.REGRESSION and computed_loss < self.accuracy_threshold:
@@ -243,9 +236,10 @@ class Model():
 
     def SGD(self, w, batch_x, batch_y):
         step = self.learning_rate
-        j = np.random.randint(0, len(batch_x))
-        gradient = self.backpropagation([batch_x[j], batch_y[j]], w.copy(), self.layers)
-        new_w = np.subtract(w, step * (np.add(np.array(gradient), self.regularizer * np.array(w))))
+        for i in range(len(batch_x)):
+            gradient = self.backpropagation([batch_x[i], batch_y[i]], w.copy(), self.layers)
+            new_w = np.subtract(w, step * (np.add(np.array(gradient), self.regularizer * np.array(w))))
+            w = new_w
         return new_w
 
     def backpropagation(self, data_point, w, G):
