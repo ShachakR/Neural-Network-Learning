@@ -21,7 +21,7 @@ class ActivationFactory:
         elif name == "Sigmoid":
             return Sigmoid()
         else:
-            raise ValueError(f"Unsupported activation function: {name}")
+            return None
 
 class LossFactory:
     @staticmethod
@@ -35,7 +35,7 @@ class LossFactory:
         elif name == "BinaryCrossentropy":
             return BinaryCrossentropy()
         else:
-            raise ValueError(f"Unsupported loss function: {name}")
+            return None
 
 class Loss(ABC):
     @abstractmethod
@@ -236,10 +236,12 @@ class Model():
 
     def SGD(self, w, batch_x, batch_y):
         step = self.learning_rate
+        avg_gradient = np.zeros_like(w)
         for i in range(len(batch_x)):
             gradient = self.backpropagation([batch_x[i], batch_y[i]], w.copy(), self.layers)
-            new_w = np.subtract(w, step * (np.add(np.array(gradient), self.regularizer * np.array(w))))
-            w = new_w
+            avg_gradient = np.add(gradient, avg_gradient)
+        avg_gradient = avg_gradient / len(batch_x)
+        new_w = np.subtract(w, step * (np.add(np.array(avg_gradient), self.regularizer * np.array(w))))
         return new_w
 
     def backpropagation(self, data_point, w, G):
